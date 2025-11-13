@@ -4,12 +4,14 @@
 
 ## 功能特性
 
-- **多平台爬取**: 支持Reddit、Twitter、微博等平台的梗文化内容爬取
+- **多平台爬取**: 支持抖音、贴吧、B站、知乎、微博、小红书等中文平台梗文化内容爬取
+- **模拟登录**: 支持Cookie模拟登录，获取更准确和完整的数据
 - **智能嵌入**: 使用先进的文本嵌入技术进行语义搜索
 - **趋势分析**: 实时分析梗文化的热度趋势和演进方向
 - **自动总结**: 基于LLM的智能内容总结和知识卡生成
 - **向量搜索**: 高效的向量相似性搜索
 - **REST API**: 提供完整的API接口服务
+- **并发爬取**: 支持多平台并行爬取，提高效率
 
 ## 系统架构
 
@@ -43,10 +45,38 @@ DATABASE_URL=sqlite:///meme_commons.db
 # Dashscope API配置
 DASHSCOPE_API_KEY=your_api_key_here
 
+# Cookie模拟登录配置 (推荐)
+# 使用Cookie可以获取更准确和完整的数据
+DOUYIN_COOKIE=your_douyin_cookie_here
+BILIBILI_COOKIE=your_bilibili_cookie_here
+WEIBO_COOKIE=your_weibo_cookie_here
+ZHIHU_COOKIE=your_zhihu_cookie_here
+XIAOHONGSHU_COOKIE=your_xiaohongshu_cookie_here
+TIEBA_COOKIE=your_tieba_cookie_here
+
 # MCP服务器配置
 MCP_HOST=0.0.0.0
 MCP_PORT=8080
 ```
+
+#### Cookie获取方法 (重要)
+
+为了获取更准确的数据，建议配置各平台的Cookie：
+
+**以Chrome浏览器为例：**
+1. 打开目标平台网页 (如: https://www.douyin.com)
+2. 按 `F12` 打开开发者工具
+3. 切换到 `Application` (应用) 标签
+4. 点击 `Cookies` → 选择对应域名
+5. 复制Cookie字符串值
+
+**各平台访问地址：**
+- 抖音: https://www.douyin.com
+- B站: https://www.bilibili.com  
+- 微博: https://www.weibo.com
+- 知乎: https://www.zhihu.com
+- 小红书: https://www.xiaohongshu.com
+- 贴吧: https://tieba.baidu.com
 
 ### 3. 启动系统
 
@@ -86,9 +116,20 @@ curl -X POST "http://localhost:8080/mcp/summarize" \
 
 #### 爬取平台内容
 ```bash
+# 爬取抖音热门内容
 curl -X POST "http://localhost:8080/mcp/crawl" \
   -H "Content-Type: application/json" \
-  -d '{"platforms": ["reddit"], "keywords": ["meme"], "limit": 100}'
+  -d '{"platforms": ["douyin"], "limit": 50}'
+
+# 搜索梗相关视频
+curl -X POST "http://localhost:8080/mcp/crawl" \
+  -H "Content-Type: application/json" \
+  -d '{"platforms": ["douyin", "bilibili"], "keywords": ["梗", "沙雕"], "limit": 100}'
+
+# 爬取所有平台
+curl -X POST "http://localhost:8080/mcp/crawl" \
+  -H "Content-Type: application/json" \
+  -d '{"platforms": ["all"], "limit": 200}'
 ```
 
 ## 模块说明
@@ -135,16 +176,20 @@ curl -X POST "http://localhost:8080/mcp/crawl" \
 ```json
 {
   "id": "唯一标识",
-  "platform": "reddit",
+  "platform": "douyin",
   "post_id": "平台帖子ID",
-  "author": "作者",
-  "content": "帖子内容",
-  "url": "帖子链接",
-  "upvotes": 100,
-  "downvotes": 5,
-  "comment_count": 25,
+  "author": "博主名称",
+  "title": "视频标题",
+  "content": "内容描述",
+  "url": "视频链接",
+  "view_count": 10000,
+  "like_count": 500,
+  "comment_count": 100,
+  "share_count": 25,
   "timestamp": "2024-01-01T00:00:00",
-  "keywords": ["关键词"]
+  "keywords": ["梗", "沙雕", "搞笑"],
+  "source": "热门视频",
+  "rank": 1
 }
 ```
 

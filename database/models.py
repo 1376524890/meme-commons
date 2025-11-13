@@ -37,20 +37,33 @@ class MemeCard(Base):
         }
 
 class RawPost(Base):
-    """原始帖子表"""
+    """原始帖子表 - 支持多平台扩展"""
     __tablename__ = "posts_raw"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     platform = Column(String(50), nullable=False, index=True)
     url = Column(Text, unique=True)
     content = Column(Text, nullable=False)
+    title = Column(String(500))  # 标题字段
     author = Column(String(100))
     timestamp = Column(DateTime, index=True)
+    
+    # 通用互动数据
     upvotes = Column(Integer, default=0)
     downvotes = Column(Integer, default=0)
     comment_count = Column(Integer, default=0)
+    like_count = Column(Integer, default=0)  # 点赞数
+    view_count = Column(Integer, default=0)  # 浏览数
+    share_count = Column(Integer, default=0)  # 分享数
+    
+    # 平台特定数据 (JSON格式存储)
+    platform_specific = Column(Text)  # 存储平台特定字段，如微博排名、知乎关注数等
+    
+    # 嵌入和处理状态
     embedding = Column(Text)  # JSON string for SQLite
     processed = Column(Boolean, default=False)
+    source = Column(String(100))  # 内容来源，如"热搜"、"热门视频"等
+    
     created_at = Column(DateTime, default=func.now())
     
     def to_dict(self):
@@ -59,16 +72,28 @@ class RawPost(Base):
             "id": str(self.id),
             "platform": self.platform,
             "url": self.url,
+            "title": self.title,
             "content": self.content,
             "author": self.author,
             "timestamp": self.timestamp.isoformat() if self.timestamp else None,
             "upvotes": self.upvotes,
             "downvotes": self.downvotes,
             "comment_count": self.comment_count,
+            "like_count": self.like_count,
+            "view_count": self.view_count,
+            "share_count": self.share_count,
+            "platform_specific": json.loads(self.platform_specific) if self.platform_specific else {},
             "embedding": json.loads(self.embedding) if self.embedding else None,
             "processed": self.processed,
+            "source": self.source,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
+    
+    def update_platform_specific(self, **kwargs):
+        """更新平台特定数据"""
+        current_data = json.loads(self.platform_specific) if self.platform_specific else {}
+        current_data.update(kwargs)
+        self.platform_specific = json.dumps(current_data, ensure_ascii=False)
 
 class TrendData(Base):
     """趋势数据表"""

@@ -225,14 +225,26 @@ def render_knowledge_card(knowledge: Dict[str, Any]):
         
         # 操作按钮
         col1, col2, col3 = st.columns(3)
+        
+        # 生成唯一标识符确保按钮key不重复
+        knowledge_id = knowledge.get('id', 'unknown')
+        title = knowledge.get('title', 'untitled')
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_suffix = f"{title}_{knowledge_id}_{timestamp}"
+        
         with col1:
-            if st.button("⭐ 收藏", key=f"favorite_{knowledge.get('id', 'unknown')}"):
+            if st.button("⭐ 收藏", key=f"favorite_{unique_suffix}"):
                 st.success("已添加到收藏")
+                st.session_state.favorite_memes.append({
+                    'id': knowledge_id,
+                    'title': title,
+                    'timestamp': datetime.now().isoformat()
+                })
         with col2:
-            if st.button("📤 分享", key=f"share_{knowledge.get('id', 'unknown')}"):
+            if st.button("📤 分享", key=f"share_{unique_suffix}"):
                 st.info("分享链接已复制")
         with col3:
-            if st.button("🔄 刷新", key=f"refresh_{knowledge.get('id', 'unknown')}"):
+            if st.button("🔄 刷新", key=f"refresh_{unique_suffix}"):
                 st.rerun()
 
 def render_trending():
