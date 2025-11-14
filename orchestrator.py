@@ -7,12 +7,12 @@ from typing import Dict, Any, List, Optional, Union
 from datetime import datetime
 import json
 
-from meme_commons.database.models import get_db_session
-from meme_commons.tools.crawler import crawler
-from meme_commons.tools.embedding import embedding_tool
-from meme_commons.tools.query import query_tool
-from meme_commons.tools.summarizer import meme_summarizer
-from meme_commons.tools.trend_analysis import trend_analysis_tool
+from database.models import get_db_session
+from tools.crawler import crawler
+from tools.embedding import embedding_tool
+from tools.query import query_tool
+from tools.summarizer import meme_summarizer
+from tools.trend_analysis import trend_analysis_tool
 
 logger = logging.getLogger(__name__)
 

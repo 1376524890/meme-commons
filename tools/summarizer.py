@@ -8,9 +8,9 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
 from sqlalchemy.orm import Session
-from meme_commons.database.models import MemeCard, RawPost, TrendData, get_db_session
-from meme_commons.config import settings
-from meme_commons.vector_store import vector_store, cache_manager
+from database.models import MemeCard, RawPost, TrendData, get_db_session
+from config import settings
+from vector_store import vector_store
 
 logger = logging.getLogger(__name__)
 

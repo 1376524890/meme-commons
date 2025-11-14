@@ -9,16 +9,16 @@ from typing import Optional
 
 from aiohttp import web
 
-from meme_commons.config import settings
-from meme_commons.server.mcp_server import mcp_server
-from meme_commons.database.models import init_database
-from meme_commons.vector_store import vector_store
-from meme_commons.tools.crawler import crawler
-from meme_commons.tools.embedding import embedding_tool
-from meme_commons.tools.query import query_tool
-from meme_commons.tools.summarizer import meme_summarizer
-from meme_commons.tools.trend_analysis import trend_analysis_tool
-from meme_commons.orchestrator import orchestrator
+from config import settings
+from server.mcp_server import mcp_server
+from database.models import init_database
+from vector_store import vector_store
+from tools.crawler import crawler
+from tools.embedding import embedding_tool
+from tools.query import query_tool
+from tools.summarizer import meme_summarizer
+from tools.trend_analysis import trend_analysis_tool
+from orchestrator import orchestrator
 
 # 配置日志
 logging.basicConfig(

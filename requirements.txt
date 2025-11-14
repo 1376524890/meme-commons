@@ -25,9 +25,9 @@ sentence-transformers==2.2.2
 beautifulsoup4==4.12.2
 lxml==4.9.3
 
-# Concurrency and networking
-concurrent.futures==3.1.1
-urllib3==2.0.7
+# Frontend (Streamlit)
+streamlit==1.31.0
+plotly==5.17.0
 
 # Text processing
 jieba==0.42.1
@@ -46,5 +46,6 @@ redis==5.0.1
 # Time utilities
 python-dateutil==2.8.2
 
-# ID generation
-uuid6==0.1.0
+# Additional utilities
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
