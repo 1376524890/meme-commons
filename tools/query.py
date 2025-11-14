@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, desc, asc
 from sqlalchemy.sql import func
 import logging
-from meme_commons.database.models import MemeCard, RawPost, TrendData, get_db_session
-from meme_commons.vector_store import vector_store, cache_manager
-from meme_commons.tools.embedding import embedding_tool
+from database.models import MemeCard, RawPost, TrendData, get_db_session
+from vector_store import vector_store, cache_manager
+from tools.embedding import embedding_tool
 
 logger = logging.getLogger(__name__)
 

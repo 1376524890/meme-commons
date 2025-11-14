@@ -10,8 +10,8 @@ import json
 from collections import defaultdict, Counter
 import statistics
 import math
-from meme_commons.database.models import MemeCard, RawPost, TrendData, get_db_session
-from meme_commons.tools.summarizer import meme_summarizer
+from database.models import MemeCard, RawPost, TrendData, get_db_session
+from tools.summarizer import meme_summarizer
 
 logger = logging.getLogger(__name__)
 

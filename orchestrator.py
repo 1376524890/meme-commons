@@ -108,17 +108,13 @@ class LLMOrchestrator:
         if not query:
             return {"error": "Missing search query"}
         
-        # 执行向量搜索
-        search_results = query_tool.search_knowledge(query, limit=request.get("limit", 10))
-        
-        # 同时执行关键词搜索
-        keyword_results = query_tool.search_by_keyword(query, limit=request.get("limit", 5))
+        # 执行知识库查询
+        search_results = query_tool.query_knowledge(query, limit=request.get("limit", 10))
         
         return {
             "query": query,
-            "vector_results": search_results,
-            "keyword_results": keyword_results,
-            "total_found": len(search_results) + len(keyword_results)
+            "search_results": search_results,
+            "total_found": len(search_results)
         }
     
     async def _handle_get_trending(self, request: Dict[str, Any]) -> Dict[str, Any]:
@@ -178,7 +174,7 @@ class LLMOrchestrator:
     
     async def _handle_crawl_platform(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """处理平台爬取请求"""
-        platforms = request.get("platforms", ["reddit"])
+        platform = request.get("platform", "all")
         keywords = request.get("keywords", [])
         limit = request.get("limit", 100)
         
@@ -186,17 +182,21 @@ class LLMOrchestrator:
             return {"error": "Missing keywords for crawling"}
         
         # 执行爬取
-        crawl_results = crawler.crawl_multiple_platforms(
-            platforms=platforms,
-            keywords=keywords,
-            limit=limit
-        )
+        if platform.lower() == "all":
+            crawl_results = crawler.crawl_all_platforms(limit=limit, keywords=keywords)
+        else:
+            crawl_results = crawler.crawl_source(platform, limit=limit, keywords=keywords)
+        
+        # 转换datetime对象为字符串，避免JSON序列化错误
+        for post in crawl_results:
+            if 'timestamp' in post and hasattr(post['timestamp'], 'isoformat'):
+                post['timestamp'] = post['timestamp'].isoformat()
         
         return {
-            "platforms": platforms,
+            "platform": platform,
             "keywords": keywords,
             "crawl_results": crawl_results,
-            "total_posts": sum(len(result.get("posts", [])) for result in crawl_results.values())
+            "total_posts": len(crawl_results)
         }
     
     async def _handle_get_meme_info(self, request: Dict[str, Any]) -> Dict[str, Any]:

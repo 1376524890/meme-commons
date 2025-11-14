@@ -19,6 +19,7 @@ from tools.query import query_tool
 from tools.summarizer import meme_summarizer
 from tools.trend_analysis import trend_analysis_tool
 from orchestrator import orchestrator
+from data_pipeline import data_pipeline
 
 # 配置日志
 logging.basicConfig(
@@ -43,11 +44,27 @@ class MemeCommonsSystem:
             logger.info("Initializing database...")
             init_database(settings.DATABASE_URL)
             
-            # 2. 初始化向量存储
+            # 2. 运行完整的数据处理管道
+            logger.info("Running complete meme data pipeline...")
+            logger.info("This will: 1) Crawl meme data from internet platforms")
+            logger.info("           2) Preprocess and store structured data in database") 
+            logger.info("           3) Generate structured knowledge cards with LLM")
+            logger.info("           4) Update vector storage for search functionality")
+            
+            pipeline_result = await data_pipeline.run_full_pipeline()
+            
+            if pipeline_result.get("status") == "completed":
+                logger.info("Data pipeline completed successfully!")
+                summary = pipeline_result.get("summary", {})
+                logger.info(f"Pipeline summary: {summary}")
+            else:
+                logger.warning(f"Data pipeline completed with issues: {pipeline_result}")
+            
+            # 3. 初始化向量存储
             logger.info("Initializing vector store...")
             # vector_store.initialize() # 向量存储可能不需要异步初始化
             
-            # 3. 初始化各个工具
+            # 4. 初始化各个工具
             logger.info("Initializing tools...")
             
             # 爬虫工具
@@ -65,15 +82,16 @@ class MemeCommonsSystem:
             # 趋势分析工具
             # trend_analysis_tool.initialize() # 趋势分析可能不需要异步初始化
             
-            # 4. 初始化LLM协调器
+            # 5. 初始化LLM协调器
             logger.info("Initializing LLM orchestrator...")
             
-            # 5. 启动MCP服务器
+            # 6. 启动MCP服务器
             logger.info("Starting MCP server...")
             self.runner = await mcp_server.start_server()
             
             self.is_running = True
             logger.info("meme-commons system initialized successfully!")
+            logger.info("System is now ready with populated meme knowledge base!")
             
         except Exception as e:
             logger.error(f"System initialization failed: {e}")

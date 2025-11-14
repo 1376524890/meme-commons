@@ -12,9 +12,9 @@ from aiohttp.web_request import Request
 from aiohttp.web_response import Response
 import aiohttp_cors
 
-from meme_commons.config import settings
-from meme_commons.orchestrator import orchestrator
-from meme_commons.database.models import get_db_session
+from config import settings
+from orchestrator import orchestrator
+from database.models import get_db_session
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +28,9 @@ class MCPServer:
         self.setup_routes()
         self.setup_cors()
         self.orchestrator = orchestrator
+        
+        # 注意：自动化调度器将在server启动时初始化，避免数据库未初始化的问题
+        self.automation_scheduler = None
     
     def setup_routes(self):
         """设置API路由"""
@@ -60,14 +63,20 @@ class MCPServer:
         # 分类接口
         self.app.router.add_get('/mcp/categories', self.get_categories)
         
-        # 演进分析接口
-        self.app.router.add_get('/mcp/evolution/{meme_id}', self.get_evolution)
-        
         # 系统状态接口
         self.app.router.add_get('/mcp/status', self.get_system_status)
         
         # 通用查询接口
         self.app.router.add_post('/mcp/query', self.handle_general_query)
+        
+        # 自动化任务管理相关API
+        self.app.router.add_get('/mcp/automation/tasks', self.get_all_tasks)
+        self.app.router.add_post('/mcp/automation/crawl', self.submit_crawl_task)
+        self.app.router.add_post('/mcp/automation/full_pipeline', self.submit_full_pipeline_task)
+        self.app.router.add_post('/mcp/automation/analysis', self.submit_analysis_task)
+        
+        # 知识卡管理API
+        self.app.router.add_get('/mcp/knowledge/stats', self.get_knowledge_stats)
     
     def setup_cors(self):
         """设置CORS支持"""
@@ -120,7 +129,7 @@ class MCPServer:
             # 直接从数据库查询梗知识卡
             session = get_db_session()
             try:
-                from meme_commons.database.models import MemeCard
+                from database.models import MemeCard
                 from sqlalchemy import or_
                 
                 # 搜索梗知识卡
@@ -412,6 +421,150 @@ class MCPServer:
                 "error": str(e)
             }, status=500)
     
+    async def get_all_tasks(self, request: Request) -> Response:
+        """获取所有任务状态"""
+        try:
+            if not self.automation_scheduler:
+                return web.json_response({
+                    "success": False,
+                    "error": "Automation scheduler not initialized"
+                }, status=503)
+            
+            tasks = self.automation_scheduler.get_all_tasks()
+            
+            return web.json_response({
+                "success": True,
+                "data": tasks,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Get all tasks failed: {e}")
+            return web.json_response({
+                "success": False,
+                "error": str(e)
+            }, status=500)
+    
+    async def submit_crawl_task(self, request: Request) -> Response:
+        """提交爬取任务"""
+        try:
+            if not self.automation_scheduler:
+                return web.json_response({
+                    "success": False,
+                    "error": "Automation scheduler not initialized"
+                }, status=503)
+            
+            data = await request.json()
+            
+            platform = data.get('platform', 'weibo')
+            keywords = data.get('keywords', [])
+            limit = data.get('limit', 20)
+            
+            if not keywords:
+                return web.json_response({
+                    "error": "Missing required field: keywords"
+                }, status=400)
+            
+            task_id = self.automation_scheduler.submit_crawl_task(platform, keywords, limit)
+            
+            return web.json_response({
+                "success": True,
+                "task_id": task_id,
+                "message": "Crawl task submitted successfully"
+            })
+            
+        except Exception as e:
+            logger.error(f"Submit crawl task failed: {e}")
+            return web.json_response({
+                "success": False,
+                "error": str(e)
+            }, status=500)
+    
+    async def submit_full_pipeline_task(self, request: Request) -> Response:
+        """提交完整流程任务"""
+        try:
+            if not self.automation_scheduler:
+                return web.json_response({
+                    "success": False,
+                    "error": "Automation scheduler not initialized"
+                }, status=503)
+            
+            data = await request.json()
+            
+            platforms = data.get('platforms', ['weibo', 'douyin'])
+            keywords = data.get('keywords', [])
+            limit = data.get('limit', 20)
+            
+            if not keywords:
+                return web.json_response({
+                    "error": "Missing required field: keywords"
+                }, status=400)
+            
+            task_id = self.automation_scheduler.submit_full_pipeline_task(platforms, keywords, limit)
+            
+            return web.json_response({
+                "success": True,
+                "task_id": task_id,
+                "message": "Full pipeline task submitted successfully"
+            })
+            
+        except Exception as e:
+            logger.error(f"Submit full pipeline task failed: {e}")
+            return web.json_response({
+                "success": False,
+                "error": str(e)
+            }, status=500)
+    
+    async def submit_analysis_task(self, request: Request) -> Response:
+        """提交分析任务"""
+        try:
+            if not self.automation_scheduler:
+                return web.json_response({
+                    "success": False,
+                    "error": "Automation scheduler not initialized"
+                }, status=503)
+            
+            data = await request.json()
+            
+            source = data.get('source', 'recent')
+            
+            task_id = self.automation_scheduler.submit_analysis_task(source)
+            
+            return web.json_response({
+                "success": True,
+                "task_id": task_id,
+                "message": "Analysis task submitted successfully"
+            })
+            
+        except Exception as e:
+            logger.error(f"Submit analysis task failed: {e}")
+            return web.json_response({
+                "success": False,
+                "error": str(e)
+            }, status=500)
+    
+    async def get_knowledge_stats(self, request: Request) -> Response:
+        """获取知识卡统计信息"""
+        try:
+            from knowledge_card_manager import KnowledgeCardManager
+            
+            manager = KnowledgeCardManager()
+            stats = manager.get_knowledge_card_statistics()
+            manager.close()
+            
+            return web.json_response({
+                "success": True,
+                "data": stats,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Get knowledge stats failed: {e}")
+            return web.json_response({
+                "success": False,
+                "error": str(e)
+            }, status=500)
+    
     async def handle_general_query(self, request: Request) -> Response:
         """处理通用查询接口"""
         try:
@@ -451,6 +604,11 @@ class MCPServer:
         
         logger.info(f"Starting MCP Server on {host}:{port}")
         
+        # 初始化自动化调度器（在数据库已初始化之后）
+        from automation_scheduler import AutomationScheduler
+        self.automation_scheduler = AutomationScheduler(settings.DATABASE_URL)
+        self.automation_scheduler.start_scheduler()
+        
         runner = web.AppRunner(self.app)
         await runner.setup()
         
@@ -472,12 +630,23 @@ class MCPServer:
         logger.info(f"  GET  /mcp/evolution/<id> - Get evolution")
         logger.info(f"  GET  /mcp/status - System status")
         logger.info(f"  POST /mcp/query - General query")
+        logger.info(f"  GET  /mcp/automation/tasks - Get all automation tasks")
+        logger.info(f"  POST /mcp/automation/crawl - Submit crawl task")
+        logger.info(f"  POST /mcp/automation/full_pipeline - Submit full pipeline task")
+        logger.info(f"  POST /mcp/automation/analysis - Submit analysis task")
+        logger.info(f"  GET  /mcp/knowledge/stats - Get knowledge card statistics")
         
         return runner
     
     async def stop_server(self, runner):
         """停止MCP服务器"""
         logger.info("Stopping MCP Server...")
+        
+        # 停止自动化调度器
+        if self.automation_scheduler:
+            self.automation_scheduler.stop_scheduler()
+            self.automation_scheduler.close()
+        
         await runner.cleanup()
         logger.info("MCP Server stopped")
 

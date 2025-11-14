@@ -21,22 +21,47 @@
 
 ## 快速开始
 
-### 1. 环境准备
+### 1. 一键启动系统
+
+```bash
+# 使用一键启动脚本（推荐）
+./start_meme_commons.sh
+
+# 激活conda环境并手动启动
+conda activate meme
+python main.py
+```
+
+### 2. 环境准备和依赖安装
+
+#### 使用conda环境（推荐）
+
+```bash
+# 检查并创建conda环境
+conda create -n meme python=3.11 -y
+conda activate meme
+
+# 安装依赖
+pip install -r requirements.txt
+```
+
+#### 直接使用pip
 
 ```bash
 # 安装依赖
 pip install -r requirements.txt
-
-# 复制环境配置
-cp .env.example .env
-
-# 编辑配置文件
-vim .env
 ```
 
-### 2. 配置环境变量
+### 3. 配置环境变量
 
-在`.env`文件中配置必要的API密钥和数据库信息：
+```bash
+# 复制环境配置模板
+cp .env.example .env
+
+# 编辑配置文件，配置必要的API密钥和数据库信息
+```
+
+在`.env`文件中配置关键参数：
 
 ```bash
 # 数据库配置
@@ -56,7 +81,7 @@ TIEBA_COOKIE=your_tieba_cookie_here
 
 # MCP服务器配置
 MCP_HOST=0.0.0.0
-MCP_PORT=8080
+MCP_PORT=8002
 ```
 
 #### Cookie获取方法 (重要)
@@ -78,38 +103,73 @@ MCP_PORT=8080
 - 小红书: https://www.xiaohongshu.com
 - 贴吧: https://tieba.baidu.com
 
-### 3. 启动系统
+### 4. 启动系统
+
+#### 方式一：一键启动（推荐）
 
 ```bash
-# 启动完整系统
-python -m meme_commons.main
+# 使用新的简化启动脚本
+./run.sh
 
-# 或者直接运行
+# 或者仅安装依赖
+./run.sh --deps-only
+
+# 查看启动帮助
+./run.sh --help
+```
+
+#### 方式二：手动启动
+
+```bash
+# 激活环境并启动主程序
+conda activate meme
 python main.py
+```
+
+### 5. 访问系统
+
+启动成功后，可以访问：
+
+- **前端界面**: http://localhost:8501
+- **后端API**: http://localhost:8002
+- **健康检查**: http://localhost:8002/health
+
+### 6. 停止系统
+
+```bash
+# 停止后端服务
+kill $(cat backend.pid)
+
+# 停止前端服务
+kill $(cat frontend.pid)
+
+# 或者使用pkill
+pkill -f "python main.py"
+pkill -f "streamlit"
 ```
 
 ### 4. API使用示例
 
 #### 查询梗知识
 ```bash
-curl "http://localhost:8080/mcp/knowledge?q=梗文化&limit=10"
+curl "http://localhost:8002/mcp/knowledge?q=梗文化&limit=10"
 ```
 
 #### 获取热门梗
 ```bash
-curl "http://localhost:8080/mcp/trending?time_window=24h&limit=20"
+curl "http://localhost:8002/mcp/trending?time_window=24h&limit=20"
 ```
 
 #### 分析梗趋势
 ```bash
-curl -X POST "http://localhost:8080/mcp/trend/analyze" \
+curl -X POST "http://localhost:8002/mcp/trend/analyze" \
   -H "Content-Type: application/json" \
   -d '{"meme_id": "some_meme_id", "time_window": "7d"}'
 ```
 
 #### 总结内容
 ```bash
-curl -X POST "http://localhost:8080/mcp/summarize" \
+curl -X POST "http://localhost:8002/mcp/summarize" \
   -H "Content-Type: application/json" \
   -d '{"content": "要总结的内容"}'
 ```
@@ -117,17 +177,17 @@ curl -X POST "http://localhost:8080/mcp/summarize" \
 #### 爬取平台内容
 ```bash
 # 爬取抖音热门内容
-curl -X POST "http://localhost:8080/mcp/crawl" \
+curl -X POST "http://localhost:8002/mcp/crawl" \
   -H "Content-Type: application/json" \
   -d '{"platforms": ["douyin"], "limit": 50}'
 
 # 搜索梗相关视频
-curl -X POST "http://localhost:8080/mcp/crawl" \
+curl -X POST "http://localhost:8002/mcp/crawl" \
   -H "Content-Type: application/json" \
   -d '{"platforms": ["douyin", "bilibili"], "keywords": ["梗", "沙雕"], "limit": 100}'
 
 # 爬取所有平台
-curl -X POST "http://localhost:8080/mcp/crawl" \
+curl -X POST "http://localhost:8002/mcp/crawl" \
   -H "Content-Type: application/json" \
   -d '{"platforms": ["all"], "limit": 200}'
 ```

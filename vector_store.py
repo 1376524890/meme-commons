@@ -6,8 +6,8 @@ import json
 import numpy as np
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from meme_commons.database.models import RawPost, MemeCard, TrendData, get_db_session
-from meme_commons.config import settings
+from database.models import RawPost, MemeCard, TrendData, get_db_session
+from config import settings
 import logging
 
 logger = logging.getLogger(__name__)

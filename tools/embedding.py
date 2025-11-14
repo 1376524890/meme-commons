@@ -6,9 +6,9 @@ import json
 import numpy as np
 from typing import List, Dict, Any, Optional
 import logging
-from meme_commons.config import settings
-from meme_commons.vector_store import vector_store
-from meme_commons.database.models import RawPost, get_db_session
+from config import settings
+from vector_store import vector_store
+from database.models import RawPost, get_db_session
 import time
 
 logger = logging.getLogger(__name__)
