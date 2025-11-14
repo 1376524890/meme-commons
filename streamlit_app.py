@@ -113,7 +113,7 @@ def render_sidebar():
     # 导航菜单
     page = st.sidebar.radio(
         "选择功能",
-        ["🔍 梗知识查询", "📊 热门梗", "🔎 高级搜索", "📈 数据分析", "⚙️ 系统管理"]
+        ["🔍 梗知识查询", "📊 热门梗", "🔎 高级搜索", "📈 数据分析"]
     )
     
     # API连接状态
@@ -126,6 +126,10 @@ def render_sidebar():
             st.sidebar.warning("⚠️ 连接异常")
     except:
         st.sidebar.error("❌ 连接失败")
+    
+    # 后台监控链接
+    st.sidebar.markdown("### 🔧 管理入口")
+    st.sidebar.markdown("[后台监控界面](http://localhost:8502) - 用于系统配置和管理")
     
     # 用户偏好设置
     st.sidebar.markdown("### ⚙️ 偏好设置")
@@ -330,36 +334,10 @@ def render_data_analysis():
     st.plotly_chart(fig, use_container_width=True)
 
 def render_system_management():
-    """渲染系统管理界面"""
+    """渲染系统管理界面 - 已迁移到后台监控"""
     st.header("⚙️ 系统管理")
-    
-    # 系统状态
-    st.markdown("#### 🔍 系统状态")
-    status = MemeCommonsAPI.get_system_status()
-    
-    if status:
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.json(status)
-        
-        with col2:
-            # 系统健康指标
-            st.markdown("#### 💚 健康指标")
-            st.success("数据库: 正常")
-            st.info("向量存储: 正常")
-            st.warning("爬虫服务: 繁忙")
-    
-    # 系统配置
-    st.markdown("#### ⚙️ 配置管理")
-    
-    if st.button("🔄 重启系统"):
-        with st.spinner("正在重启系统..."):
-            st.success("系统重启完成")
-    
-    if st.button("🧹 清理缓存"):
-        with st.spinner("正在清理缓存..."):
-            st.success("缓存清理完成")
+    st.warning("系统管理功能已迁移到后台监控界面")
+    st.info("请访问 http://localhost:8502 进行系统配置和管理")
 
 def main():
     """主函数"""
@@ -380,8 +358,6 @@ def main():
         render_advanced_search()
     elif page == "📈 数据分析":
         render_data_analysis()
-    elif page == "⚙️ 系统管理":
-        render_system_management()
 
 if __name__ == "__main__":
     main()
